@@ -1,0 +1,13 @@
+is_serial=false
+# is_serial=true
+waypoints_filename=waypoints.txt
+use_right_hand_cartesian_system=true
+wheel_radius_meter=0.095
+wheel_seperation=0.32125
+
+# webot config
+left_motor_device_name=left wheel
+right_motor_device_name=right wheel
+
+# serial config
+port=/dev/cu.usbserial-10

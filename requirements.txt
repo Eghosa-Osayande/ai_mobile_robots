@@ -1,0 +1,7 @@
+pyserial
+ipykernel
+scikit-learn
+numpy
+matplotlib
+pandas
+python-dotenv
