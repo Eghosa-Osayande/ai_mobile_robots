@@ -1,10 +1,8 @@
 import math
-from lab_config import LabConfig
 from p3dx_robot import P3DX_Robot
 from helpers import calculateNavigation, turnTime, travelTime
+import config
 
-
-config = LabConfig()
 
 robot: P3DX_Robot = None
 
@@ -27,13 +25,20 @@ else:
     )
 
 unitVelocity = 0.02
-velocity = 10
+velocity = 1
 
 
 print("starting loop")
 robot.step(2)
 currentPose = (0, 0, 0)
-for i, node in enumerate(config.nodes, 1):
+
+unitTime = 0.5
+
+for i, node in enumerate(config.nodes[::1], 0):
+    if i == 0:
+        currentPose = (*node, 0)
+        continue
+
     target = robot.getActualPose()
 
     dist, turn = calculateNavigation(
@@ -42,25 +47,41 @@ for i, node in enumerate(config.nodes, 1):
         currentPose[2],
     )
 
-    print(
-        f"Going to node {i} -> {node}. Turn {math.degrees(turn)} degrees and travel {dist} meters, Current pose {currentPose[:2]} {math.degrees(currentPose[2])} degrees"
-    )
-
     timeToTurn = turnTime(
         velocity * unitVelocity,
         config.wheelSeperation,
         turn,
     )
 
-    if timeToTurn > 0:
+    timeToTravel = travelTime(velocity * unitVelocity, dist)
+
+    print(
+        f"""
+Current pose {currentPose[:2]} {math.degrees(currentPose[2])} degrees
+Going to node {i} -> {node}. 
+Turn {math.degrees(turn)} degrees
+Travel {dist} meters
+Turn time {timeToTurn}s
+Travel time {timeToTravel}s"""
+    )
+
+    if timeToTurn > 0 and 1 == 1:
         robot.rotate((-1 if turn > 0 else 1) * velocity)
-        robot.step(timeToTurn)
+
+        # while timeToTurn > 0:
+        #     robot.step(unitTime if timeToTurn > unitTime else timeToTurn)
+
+        #     timeToTurn -= unitTime
+
+        #     actualPose = robot.getActualPose()
+
+        #     print(actualPose)
+
+        robot.step(timeToTurn-0.0)
         robot.stop()
         robot.step(1)
 
-    timeToTravel = travelTime(velocity * unitVelocity, dist)
-
-    if timeToTravel > 0:
+    if timeToTravel > 0 and 1 == 1:
         robot.move(velocity)
         robot.step(timeToTravel)
         robot.stop()

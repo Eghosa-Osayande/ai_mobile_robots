@@ -148,5 +148,39 @@ class P3DX_Robot_Serial(P3DX_Robot):
     def stop(self):
         self.move(0)
 
-    def getActualPose(self) -> tuple[float, float]:
-        return (0, 0)
+    def receive_sips(self):
+        sip_response = self.connection.read(1024)
+
+        if sip_response[:2] != bytes([0xFA, 0xFB]):
+            return None
+
+        data = {
+            "byte_count": sip_response[2],
+            "xpos": sip_response[3],
+            "ypos": sip_response[4],
+            "theta": sip_response[5],
+            "lvel": sip_response[6],
+            "rvel": sip_response[7],
+            "battery": sip_response[8],
+            "stall_bumpers": sip_response[9],
+            "control": sip_response[10],
+            "flags": sip_response[11],
+            "compass": sip_response[12],
+            "sonar_count": sip_response[13],
+            "sonar_number": sip_response[14],
+        }
+
+        sonars = []
+        for i in range(16):
+            idx = 24 + i * 3
+            sonars.append(struct.unpack("<h", sip_response[idx : idx + 2])[0])
+        data["sonars"] = sonars
+
+        return data
+
+    def getActualPose(self) -> tuple[float, float, float]:
+        data = self.receive_sips()
+        if data is None:
+            return None
+
+        return (data["xpos"], data["ypos"], data["theta"] * 0.001534)

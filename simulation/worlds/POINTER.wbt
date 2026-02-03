@@ -1,14 +1,15 @@
-#VRML_SIM R2023b utf8
+#VRML_SIM R2025a utf8
 
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/humans/pedestrian/protos/Pedestrian.proto"
 
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.5773502691896258 0.5773502691896258 0.5773502691896258 2.0944
-  position 9.591357836199061e-05 3.429253584073101e-05 15.777274066231923
+  orientation -0.5771339328537541 -0.022867180662861454 0.8163292936047869 3.2062641504432148
+  position 5.439145105547564 -2.7828517151956116 29.839599682726046
   followType "None"
 }
 TexturedBackground {
@@ -17,14 +18,62 @@ TexturedBackgroundLight {
 }
 RectangleArena {
   floorSize 10 10
-  floorTileSize 10 10
+}
+Solid {
+  translation -0.4 -2.8 0.5
+  children [
+    Shape {
+      geometry Box {
+        size 0.45 0.45 1
+      }
+    }
+  ]
+  name "solid(8)"
+}
+Solid {
+  translation -0.4 -3.2 0.5
+  children [
+    Shape {
+      geometry Box {
+        size 0.45 1.06 1
+      }
+    }
+  ]
+  name "solid(9)"
+}
+Solid {
+  translation -3 -4.4 0.5
+  children [
+    Shape {
+      geometry Box {
+        size 1.4 0.9 1
+      }
+    }
+  ]
+  name "solid(10)"
+}
+Solid {
+  translation -3.3 -1.7 0.5
+  children [
+    Shape {
+      geometry Box {
+        size 0.7 1.6 1
+      }
+    }
+  ]
+  name "solid(11)"
+}
+Shape {
+}
+DEF Box Shape {
+}
+Pedestrian {
+  translation -1.8 0.3 1.27
 }
 Robot {
-  translation -2.0038870916724725 2.0000322069156242 0.0948992625127503
-  rotation -0.010705565756141537 -0.9999413239705938 0.0016551367849968641 0.039677870709838435
+  translation -0.1 -0.8 0.0948148
+  rotation 0.01660507867254343 -0.28499228136940963 0.9583859717891 0.12135246785565819
   children [
-    GPS {
-    }
     Camera {
       translation 0.2 0.35 0
       width 300
@@ -555,23 +604,23 @@ Robot {
     }
     DEF CASTER_WHEEL HingeJoint {
       jointParameters HingeJointParameters {
-        position -224.15774950723872
+        position -226.19421956452655
         axis 0 0 1
         anchor -0.1918 0 0
         staticFriction 0.05
       }
       endPoint Solid {
         translation -0.1918 0 0
-        rotation 0.948007863130933 0.22503450872169878 0.22503457806814015 1.6241634139925634
+        rotation 0.5775240492907732 -0.5772633595286383 -0.5772633595132283 2.094134349471152
         children [
           DEF casterWheelRim HingeJoint {
             jointParameters HingeJointParameters {
-              position -55450.29640046136
+              position -55918.44317544251
               anchor 0 -0.0521014 0.012843
             }
             endPoint Solid {
               translation 0 -0.0521014 0.012843
-              rotation 1 0 0 5.0971207056697825
+              rotation 0.9999999999999999 0 0 1.9060584558101168
               children [
                 DEF CASTER_WHEEL_RIM_SHAPE Shape {
                   appearance PBRAppearance {
@@ -732,7 +781,7 @@ Robot {
     }
     DEF LEFT_WHEEL HingeJoint {
       jointParameters HingeJointParameters {
-        position 12944.440222668107
+        position 15781.714399860106
         axis 0 1 0
         anchor 0 0.165 0
       }
@@ -747,7 +796,7 @@ Robot {
       ]
       endPoint Solid {
         translation 0 0.165 0
-        rotation 0.23674756453504261 -0.23674752282596406 -0.9422850954581078 1.6302086704928804
+        rotation 0.7068493962188092 -0.7068494396002809 0.02697778348704491 3.195535056316805
         children [
           DEF BLACK_CYLINDER_SHAPE Shape {
             appearance PBRAppearance {
@@ -1010,7 +1059,7 @@ Robot {
     }
     DEF RIGHT_WHEEL HingeJoint {
       jointParameters HingeJointParameters {
-        position 16752.029505562998
+        position 19565.277779691874
         axis 0 1 0
         anchor 0 -0.165 0
       }
@@ -1025,7 +1074,7 @@ Robot {
       ]
       endPoint Solid {
         translation 0 -0.165 0
-        rotation 0.24604730122941956 -0.24604726035251 -0.9375081179545826 1.6352813760745428
+        rotation 0.6586274478782651 -0.6586274653018739 -0.36389524158937847 2.4435932896248596
         children [
           DEF RIGHT_BLACK_CYLINDER_SHAPE Shape {
             appearance PBRAppearance {
@@ -2928,6 +2977,8 @@ Robot {
         1 1 1
       ]
     }
+    Group {
+    }
   ]
   name "Pioneer 3-DX"
   model "Adept Pioneer 3-DX"
@@ -3046,5 +3097,246 @@ Robot {
       -0.06 0 0.06
     ]
   }
-  controller "mobile_robot"
+  controller "p3dx_unified_lab"
+}
+Pose {
+}
+DEF HOUSE Pose {
+  translation -1.49 -0.85 -3.12213e-06
+  rotation 1 0 0 1.5708
+  children [
+    DEF MAIN_WALL_N Solid {
+      translation 2.2 1.2 4.08
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.85 0.85 0.85
+            roughness 0.8
+          }
+          geometry Box {
+            size 8.7 2.4 0.1
+          }
+        }
+      ]
+      boundingObject Box {
+        size 6 2.4 0.1
+      }
+    }
+    DEF MAIN_WALL_N Solid {
+      translation 2.9 1.2 2.98
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.85 0.85 0.85
+            roughness 0.8
+          }
+          geometry Box {
+            size 4.3 2.4 0.1
+          }
+        }
+      ]
+      name "solid(3)"
+      boundingObject Box {
+        size 6 2.4 0.1
+      }
+    }
+    DEF MAIN_WALL_S Solid {
+      translation 4.5 1.2 0.8
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.85 0.85 0.85
+            roughness 0.8
+          }
+          geometry Box {
+            size 1.3 2.4 0.1
+          }
+        }
+      ]
+      boundingObject Box {
+        size 6 2.4 0.1
+      }
+    }
+    Solid {
+      translation 5.75 1 1.5
+      children [
+        Shape {
+          geometry Box {
+            size 1.4 2.1 0.1
+          }
+        }
+      ]
+      name "solid(5)"
+    }
+    Solid {
+      translation 5.1 1.1 1.15
+      rotation 0 1 0 1.5707963267948968
+      children [
+        Shape {
+          geometry Box {
+            size 0.8 2.3 0.1
+          }
+        }
+      ]
+      name "solid(6)"
+    }
+    DEF MAIN_WALL_S Solid {
+      translation 4.5 1.2 0.8
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.85 0.85 0.85
+            roughness 0.8
+          }
+          geometry Box {
+            size 1.3 2.4 0.1
+          }
+        }
+      ]
+      name "solid(4)"
+      boundingObject Box {
+        size 6 2.4 0.1
+      }
+    }
+    DEF MAIN_WALL_S Solid {
+      translation 3.9 1.2 0.1
+      rotation 0 1 0 1.5707963267948968
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.85 0.85 0.85
+            roughness 0.8
+          }
+          geometry Box {
+            size 1.3 2.4 0.1
+          }
+        }
+      ]
+      name "solid(1)"
+      boundingObject Box {
+        size 6 2.4 0.1
+      }
+    }
+    DEF MAIN_WALL_W Solid {
+      translation -2.2 1.2 1.75
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.85 0.85 0.85
+            roughness 0.8
+          }
+          geometry Box {
+            size 0.1 2.4 4.7
+          }
+        }
+      ]
+      boundingObject Box {
+        size 0.1 2.4 4
+      }
+    }
+    DEF MAIN_WALL_W Solid {
+      translation 0.8 1.2 1.2
+      rotation 1 0 0 4.692820414042842e-06
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.85 0.85 0.85
+            roughness 0.8
+          }
+          geometry Box {
+            size 0.1 2.4 3.5
+          }
+        }
+      ]
+      name "solid(2)"
+      boundingObject Box {
+        size 0.1 2.4 4
+      }
+    }
+    DEF BED_WALL_S Solid {
+      translation 0.86 1.2 -0.58
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.9 0.9 0.9
+            roughness 0.8
+          }
+          geometry Box {
+            size 6 2.4 0.1
+          }
+        }
+      ]
+      boundingObject Box {
+        size 3.5 2.4 0.1
+      }
+    }
+    DEF BED_WALL_E Solid {
+      translation 6.5 1.2 -0.05
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.9 0.9 0.9
+            roughness 0.8
+          }
+          geometry Box {
+            size 0.1 2.4 8.1
+          }
+        }
+      ]
+      boundingObject Box {
+        size 0.1 2.4 8.1
+      }
+    }
+    DEF BED Solid {
+      translation 1.8 0.25 1.3
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.2 0.2 0.25
+            roughness 0.9
+          }
+          geometry Box {
+            size 1.9 0.5 0.9
+          }
+        }
+      ]
+      boundingObject Box {
+        size 1.9 0.5 0.9
+      }
+    }
+  ]
+}
+Solid {
+  translation -0.4 -1.5 0.5
+  children [
+    Shape {
+      geometry Box {
+        size 0.45 0.45 1
+      }
+    }
+  ]
+  name "solid(7)"
+}
+Solid {
+  translation -0.8 -3.6 0.5
+  children [
+    Shape {
+      geometry Box {
+        size 0.15 0.25 1
+      }
+    }
+  ]
+  name "solid(13)"
+}
+Solid {
+  translation -2.9 -3.2 0
+  children [
+    Shape {
+      geometry Cylinder {
+        height 0.1
+        radius 0.6
+      }
+    }
+  ]
+  name "solid(12)"
 }

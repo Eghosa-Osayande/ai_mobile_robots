@@ -17,6 +17,7 @@ SYNC0 = bytes([250, 251, 3, 0, 0, 0])
 SYNC1 = bytes([250, 251, 3, 1, 0, 1])
 SYNC2 = bytes([250, 251, 3, 2, 0, 2])
 
+
 def try_serial_connection():
     try:
         ser = serial.Serial(COM_PORT, BAUD_RATE, timeout=1)
@@ -42,6 +43,7 @@ def calc_checksum(packet):
 
 
 connection = try_serial_connection()
+
 
 def send_command(command_number, argument_data=1, argument_type="byte"):
     COMMAND_NUMBER = bytes([command_number])
@@ -173,6 +175,7 @@ def rVel():
 def stop():
     send_command(29)
 
+
 def send_initial_packets():
     sync_packets = [SYNC0, SYNC1, SYNC2]
     for packet in sync_packets:
@@ -199,6 +202,9 @@ def watchdog_pulse(stop_event, interval=1.5):
     while not stop_event.is_set():
         send_command(0)  # PULSE
         time.sleep(interval)
+        send_command(19, 1) 
+        print(receive_sips())
+        
 
 
 stop_event = threading.Event()
@@ -239,15 +245,16 @@ def main():
                     break
 
                 # Print robot state
-                data = get_multiple_values(
-                    ["xpos", "ypos", "theta", "lvel", "rvel", "sonars"]
-                )
-                print(data)
+                # data = get_multiple_values(
+                #     ["xpos", "ypos", "theta", "lvel", "rvel", "sonars"]
+                # )
+                # print(data)
 
     except Exception as e:
         print("Error:", e)
 
     except KeyboardInterrupt as e:
+        send_command(2)
         print("User cancelled")
 
     finally:
