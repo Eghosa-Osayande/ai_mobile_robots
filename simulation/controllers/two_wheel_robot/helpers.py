@@ -1,4 +1,35 @@
 import math
+import numpy as np
+
+
+def euclidean_distance(
+    x: float,
+    y: float,
+    goal_x: float,
+    goal_y: float,
+):
+    p = np.array([x, y])
+    g = np.array([goal_x, goal_y])
+    return np.linalg.norm(g - p)
+
+
+def heading_error_deg(
+    yaw_deg: float,
+    r: tuple[float, float],
+    t: tuple[float, float],
+):
+
+    dx = t[0] - r[0]
+    dy = t[1] - r[1]
+
+    target_angle = np.degrees(np.arctan2(dy, dx))
+
+    error = target_angle - yaw_deg
+
+    # Wrap to [-180, 180]
+    error = (error + 180) % 360 - 180
+
+    return error
 
 
 def calculateNavigation(p1: tuple, p2: tuple, current_th: float):
@@ -45,3 +76,17 @@ def travelTime(v, dist: float) -> float:
     if abs(v) > 0:
         return abs(dist / v)
     return 0
+
+def computePath(
+    origin: tuple[float, float],
+    steps: list[tuple[float, float]],
+) -> list[tuple[float, float]]:
+    x, y = origin
+    path = [(x, y)]
+
+    for dx, dy in steps:
+        x += dx
+        y += dy
+        path.append((x, y))
+
+    return path

@@ -9,3 +9,6 @@ lsof | grep usbserial
 
 ## Mobile robot
 cd simulation/controllers/mobile_robot
+
+## tk problems mac
+brew install python-tk

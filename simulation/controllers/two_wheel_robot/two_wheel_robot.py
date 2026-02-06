@@ -1,22 +1,22 @@
 import math
-from p3dx_robot import P3DX_Robot
+from two_wheel_robot_base import TwoWheelRobot
 from helpers import calculateNavigation, turnTime, travelTime
 import config
 
 
-robot: P3DX_Robot = None
+robot: TwoWheelRobot = None
 
 
 if config.isSerial:
-    from p3dx_robot_serial import P3DX_Robot_Serial
+    from two_wheel_robot_p3dx import TwoWheelRobot_P3DX
 
-    robot = P3DX_Robot_Serial(
+    robot = TwoWheelRobot_P3DX(
         port=config.port,
     )
 else:
-    from p3dx_robot_webot import P3DX_Robot_Webot
+    from two_wheel_robot_webot import TwoWheelRobotWebot
 
-    robot = P3DX_Robot_Webot(
+    robot = TwoWheelRobotWebot(
         leftMotorDeviceName=config.leftMotorDeviceName,
         rightMotorDeviceName=config.rightMotorDeviceName,
         wheelRadius=config.wheelRadius,
@@ -24,8 +24,10 @@ else:
         gpsOffset=(2, -2),
     )
 
-unitVelocity = 0.02
-velocity = 1
+
+velocity = 1 * 0.02
+if config.isSerial:
+    velocity = int(velocity / 0.02) * 0.02
 
 
 print("starting loop")
@@ -39,21 +41,21 @@ for i, node in enumerate(config.nodes[::1], 0):
         currentPose = (*node, 0)
         continue
 
-    target = robot.getActualPose()
-
     dist, turn = calculateNavigation(
         currentPose[:2],
         node,
         currentPose[2],
     )
 
+    # TODO: use v_right and v_left below
+
     timeToTurn = turnTime(
-        velocity * unitVelocity,
+        velocity,
         config.wheelSeperation,
         turn,
     )
 
-    timeToTravel = travelTime(velocity * unitVelocity, dist)
+    timeToTravel = travelTime(velocity, dist)
 
     print(
         f"""
@@ -66,25 +68,17 @@ Travel time {timeToTravel}s"""
     )
 
     if timeToTurn > 0 and 1 == 1:
-        robot.rotate((-1 if turn > 0 else 1) * velocity)
+        f = -1 if turn > 0 else 1
+        robot.move_wheels(f * velocity, f * -velocity)
 
-        # while timeToTurn > 0:
-        #     robot.step(unitTime if timeToTurn > unitTime else timeToTurn)
-
-        #     timeToTurn -= unitTime
-
-        #     actualPose = robot.getActualPose()
-
-        #     print(actualPose)
-
-        robot.step(timeToTurn-0.0)
-        robot.stop()
+        robot.step(timeToTurn - 0.0)
+        robot.move_wheels(0, 0)
         robot.step(1)
 
     if timeToTravel > 0 and 1 == 1:
-        robot.move(velocity)
+        robot.move_wheels(velocity, velocity)
         robot.step(timeToTravel)
-        robot.stop()
+        robot.move_wheels(0, 0)
         robot.step(1)
 
     currentPose = (

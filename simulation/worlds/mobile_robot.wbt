@@ -3046,5 +3046,5 @@ Robot {
       -0.06 0 0.06
     ]
   }
-  controller "mobile_robot"
+  controller "two_wheel_robot"
 }

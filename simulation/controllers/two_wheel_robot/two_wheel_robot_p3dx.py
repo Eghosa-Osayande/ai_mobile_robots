@@ -6,7 +6,7 @@ import serial
 
 from dataclasses import dataclass
 
-from p3dx_robot import P3DX_Robot
+from two_wheel_robot_base import TwoWheelRobot
 
 
 # Synchronization packets
@@ -17,7 +17,7 @@ SYNC2 = bytes([250, 251, 3, 2, 0, 2])
 
 
 @dataclass
-class P3DX_Robot_Serial(P3DX_Robot):
+class TwoWheelRobot_P3DX(TwoWheelRobot):
 
     connection: serial.Serial
     pulseThread: threading.Thread
@@ -120,33 +120,36 @@ class P3DX_Robot_Serial(P3DX_Robot):
             c ^= packet[i]
         return c
 
-    def _checkVelocity(self, velocity):
-        if not isinstance(velocity, int) or velocity > abs(127):
-            self.stop()
-            print(
-                f"velocity must be within range of -/+ 127 and an integer. velocity is {velocity}"
-            )
-            exit()
+    def _transformVelocity(self, velocity):
+        initialVelocity = velocity / 0.02
+        velocityStep = int(initialVelocity)
+        remainder = initialVelocity - velocityStep
+        return velocityStep
 
-    def move(self, velocity: int):
-        self._checkVelocity(velocity)
+    # def move(self, velocity: int):
+    #     velocity=self._transformVelocity(velocity)
+    #     self.enableMotors(True)
+
+    #     arg = ((velocity & 0xFF) << 8) | (velocity & 0xFF)
+    #     self.send_command(32, argument_data=arg)
+
+    # def rotate(self, velocity: int):
+    #     velocity=self._transformVelocity(velocity)
+    #     self.enableMotors(True)
+
+    #     arg = ((-velocity & 0xFF) << 8) | (velocity & 0xFF)
+    #     self.send_command(32, argument_data=arg)
+    
+    def move_wheels(self, v_right, v_left):
+        v_right=self._transformVelocity(v_right)
+        v_left=self._transformVelocity(v_left)
         self.enableMotors(True)
 
-        arg = ((velocity & 0xFF) << 8) | (velocity & 0xFF)
+        arg = ((v_right & 0xFF) << 8) | (v_left & 0xFF)
         self.send_command(32, argument_data=arg)
 
-    def rotate(self, velocity: int):
-        self._checkVelocity(velocity)
-        self.enableMotors(True)
-
-        arg = ((-velocity & 0xFF) << 8) | (velocity & 0xFF)
-        self.send_command(32, argument_data=arg)
-
-    def step(self, timeStep: int):
+    def step(self, timeStep):
         time.sleep(timeStep)
-
-    def stop(self):
-        self.move(0)
 
     def receive_sips(self):
         sip_response = self.connection.read(1024)
@@ -178,7 +181,7 @@ class P3DX_Robot_Serial(P3DX_Robot):
 
         return data
 
-    def getActualPose(self) -> tuple[float, float, float]:
+    def state(self) -> tuple[float, float, float]:
         data = self.receive_sips()
         if data is None:
             return None

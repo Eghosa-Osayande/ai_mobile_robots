@@ -1,0 +1,13 @@
+from dataclasses import dataclass
+
+
+@dataclass
+class TwoWheelRobot:
+
+    def move_wheels(self, v_right, v_left): ...
+
+    def step(self, timeStep): ...
+
+    def state(self): ...
+
+    def reset(self):...
