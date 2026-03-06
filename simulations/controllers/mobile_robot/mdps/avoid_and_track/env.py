@@ -272,7 +272,7 @@ class AvoidAndTrackingEnv:
             (_, img_h) = image_size
             offset_frac_y = poi[1] / img_h
 
-            print(offset_frac_y)
+            # print(offset_frac_y)
             if offset_frac_y < 0.15:
                 terminated = True
                 self.robot.move_wheels(0, 0)
@@ -283,7 +283,7 @@ class AvoidAndTrackingEnv:
             "y": pos[1],
             "th": pos[2],
             "env": "avoid_track",
-            "frame": frame,
+            # "frame": frame,
             "detection": detection,
         }
 

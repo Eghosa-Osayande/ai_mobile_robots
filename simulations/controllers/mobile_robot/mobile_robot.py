@@ -55,7 +55,7 @@ camera_index = 1
 camera_tcp_addr = ("0.0.0.0", 8081)
 
 lidar_port = "/dev/cu.usbserial-0001"
-lidar_port = None
+# lidar_port = None
 
 import os
 
