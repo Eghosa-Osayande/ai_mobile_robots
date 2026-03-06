@@ -4,38 +4,14 @@
 leftMotorDeviceName = "left wheel"
 rightMotorDeviceName = "right wheel"
 
-# serial config
+# pioneer config
 port = "/dev/cu.usbserial-10"
-# port = "/dev/cu.usbserial-140"
-# port = "/dev/cu.usbserial-110"
 baudRate = 9600
 
-# tcp config
-tcp_host = "localhost"
-tcp_port = 5000
-
-# camera tracker
-camera_index = 1
-stream_url = None
-camera_tcp_addr = ("0.0.0.0", 8081)
-
-# lidar
-lidar_port = "/dev/cu.usbserial-0001"
-lidar_port = None
-
-# Velocities
+# odometry
+odometry_dt = 0.001
 odometry_approach_v_ms = 0.1
 odometry_turn_v_ms = 0.02 * 1
-tracking_approach_v_ms = 0.08
-tracking_turn_v_ms = 0.04
-avoidance_v_ms = 0.06
-
-# Time steps
-odometry_dt = 0.001
-tracking_dt = 0.01
-avoidance_dt = 0.01
-
-# odometry
 goal_dist_thres = 0.1
 goal_heading_thres = 3.5
 odometry_nodes = [
@@ -57,25 +33,33 @@ odometry_nodes = [
     (-1.9, 3.79),
 ]
 
-odometry_nodes = [
-    (2.2, 0, 0),
-    (2.2, 2.5),
-]
+odometry_nodes = []
 
-# tracking
+# avoid and track
+tracking_approach_v_ms = 0.08
+tracking_turn_v_ms = 0.04
+avoidance_v_ms = 0.06
+tracking_dt = 0.01
+avoidance_dt = 0.01
+
 target_color_hex = "#ff0000"
 use_cascade = False
 area_constraint = None
 
-# avoidance
 avoid_dist_thres = 0.3
 front_idxs = [2, 3, 4, 5]
 left_idxs = [0, 1, 2, 3]
 right_idxs = [4, 5, 6, 7]
 
+camera_index = 1
+camera_tcp_addr = ("0.0.0.0", 8081)
+
+lidar_port = "/dev/cu.usbserial-0001"
+lidar_port = None
+
 import os
 
-from simulations.controllers.mobile_robot.two_wheel_robots.integrations.camera_client import (
+from two_wheel_robots.integrations.camera_client import (
     CamClient,
 )
 
@@ -89,7 +73,6 @@ if isSerial:
 
     robot_2wd = Pioneer3dx(
         serial_port_baud=(port, baudRate),
-        # tcp_host=(tcp_host,tcp_port),
         lidar_port=lidar_port,
     )
 
@@ -112,10 +95,6 @@ else:
     worldID = robot_webot.getCustomData()
 
 infos = []
-cam_client = CamClient(
-    src=camera_index,
-    tcp=camera_tcp_addr,
-)
 
 if worldID == "core":
     from mdps import (
@@ -155,15 +134,19 @@ if worldID == "core":
 
     print("Odometry End")
 
-    exit()
     # Tracking/Avoidance
     print("Tracking/Avoidance Start")
+
     avoid_track_agent = AvoidAndTrackAgent(
         dt=tracking_dt,
     )
 
     avoid_track_env = AvoidAndTrackingEnv(
         robot=robot_2wd,
+        cam_client=CamClient(
+            src=camera_index,
+            tcp=camera_tcp_addr,
+        ),
         # avoid
         avoid_dist_thres=avoid_dist_thres,
         front_idxs=front_idxs,
@@ -171,8 +154,6 @@ if worldID == "core":
         right_idxs=right_idxs,
         avoid_velocity=avoidance_v_ms,
         # track
-        stream_url=stream_url,
-        camera_index=camera_index,
         target_color_hex=target_color_hex,
         approach_v=tracking_approach_v_ms,
         turn_v=tracking_turn_v_ms,

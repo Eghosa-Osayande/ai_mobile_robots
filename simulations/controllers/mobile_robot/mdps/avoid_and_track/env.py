@@ -3,6 +3,7 @@ import time
 import numpy as np
 
 from two_wheel_robots.two_wheel_robot_base import TwoWheelRobotBase
+from two_wheel_robots.integrations.camera_client import CamClient
 
 import cv2 as cv2
 import sys
@@ -95,7 +96,7 @@ class AvoidAndTrackingEnv:
     def __init__(
         self,
         robot: TwoWheelRobotBase,
-        cam_client,
+        cam_client: CamClient,
         # avoidance
         front_idxs: list[float],
         left_idxs: list[float],
@@ -131,9 +132,6 @@ class AvoidAndTrackingEnv:
 
         self.target_color_hex = target_color_hex
 
-        self.cam_client = cam_client
-        print("video capture started")
-
         self.cascade = None
         if cascade_classfier_path:
             cascade = cv2.CascadeClassifier(cascade_classfier_path)
@@ -150,6 +148,11 @@ class AvoidAndTrackingEnv:
 
         # avoid
         self.prev_avoid_action = None
+
+        # camera
+        self.cam_client = cam_client
+        self.cam_client.start()
+        print("video capture started")
 
     def _avoid_obs(self, robot_state):
         x, y, th, *scans = robot_state

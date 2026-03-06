@@ -14,3 +14,7 @@ rsync -avz --include-from=".pi.include" --exclude-from=".pi.exclude" -e ssh ./ z
 - single file
 
 scp simulations/controllers/mobile_robot/mdps/avoid_and_track/env.py z@raspberrypi.local:/home/z/mr/simulations/controllers/mobile_robot/mdps/avoid_and_track/env.py
+
+# demo
+python camera_tcp_feed.py
+python lidar_script.py
