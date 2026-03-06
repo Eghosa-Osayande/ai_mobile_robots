@@ -30,6 +30,10 @@ tracking_approach_v_ms = 0.08
 tracking_turn_v_ms = 0.04
 avoidance_v_ms = 0.06
 
+tracking_approach_v_ms = 0.04
+tracking_turn_v_ms = 0.02
+avoidance_v_ms = 0.06
+
 # Time steps
 odometry_dt = 0.001
 tracking_dt = 0.01
@@ -58,8 +62,7 @@ odometry_nodes = [
 ]
 
 odometry_nodes = [
-    (2.2, 0, 0),
-    (2.2, 2.5),
+    
 ]
 
 # tracking
@@ -75,7 +78,7 @@ right_idxs = [4, 5, 6, 7]
 
 import os
 
-from simulations.controllers.mobile_robot.two_wheel_robots.integrations.camera_client import (
+from two_wheel_robots.integrations.camera_client import (
     CamClient,
 )
 
@@ -155,7 +158,7 @@ if worldID == "core":
 
     print("Odometry End")
 
-    exit()
+    # exit()
     # Tracking/Avoidance
     print("Tracking/Avoidance Start")
     avoid_track_agent = AvoidAndTrackAgent(
@@ -171,8 +174,7 @@ if worldID == "core":
         right_idxs=right_idxs,
         avoid_velocity=avoidance_v_ms,
         # track
-        stream_url=stream_url,
-        camera_index=camera_index,
+        cam_client=cam_client,
         target_color_hex=target_color_hex,
         approach_v=tracking_approach_v_ms,
         turn_v=tracking_turn_v_ms,
