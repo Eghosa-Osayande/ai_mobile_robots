@@ -7,8 +7,8 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.5773502691896258 0.5773502691896258 0.5773502691896258 2.0944
-  position 9.591357836199061e-05 3.429253584073101e-05 15.777274066231923
+  orientation -0.1942215250447084 0.2104156498275582 0.9581248632182312 1.533496680739211
+  position -0.815908641302294 -11.04770828200675 4.815640341494067
   followType "None"
 }
 TexturedBackground {
@@ -16,13 +16,22 @@ TexturedBackground {
 TexturedBackgroundLight {
 }
 RectangleArena {
-  floorSize 10 10
-  floorTileSize 10 10
+  floorSize 12 12
+  floorTileSize 24 24
 }
 Robot {
-  translation -2.0038870916724725 2.0000322069156242 0.0948992625127503
-  rotation -0.010705565756141537 -0.9999413239705938 0.0016551367849968641 0.039677870709838435
+  translation -0.22677934410311096 0.021859344735911144 0.09493496908880303
+  rotation -0.006138188908949246 -0.999980414118746 0.0012222993983127734 0.04138459378463461
   children [
+    Lidar {
+      translation 0.08 0 0.17
+      horizontalResolution 180
+      fieldOfView 3.14
+      numberOfLayers 1
+      maxRange 5
+    }
+    InertialUnit {
+    }
     GPS {
     }
     Camera {
@@ -555,23 +564,23 @@ Robot {
     }
     DEF CASTER_WHEEL HingeJoint {
       jointParameters HingeJointParameters {
-        position -224.15774950723872
+        position -223.56486512832922
         axis 0 0 1
         anchor -0.1918 0 0
         staticFriction 0.05
       }
       endPoint Solid {
         translation -0.1918 0 0
-        rotation 0.948007863130933 0.22503450872169878 0.22503457806814015 1.6241634139925634
+        rotation 0.7703620877866691 0.45085595737573064 0.45085602957016957 1.8287806463265313
         children [
           DEF casterWheelRim HingeJoint {
             jointParameters HingeJointParameters {
-              position -55450.29640046136
+              position -55453.0193085596
               anchor 0 -0.0521014 0.012843
             }
             endPoint Solid {
               translation 0 -0.0521014 0.012843
-              rotation 1 0 0 5.0971207056697825
+              rotation 1 0 0 2.374212607433707
               children [
                 DEF CASTER_WHEEL_RIM_SHAPE Shape {
                   appearance PBRAppearance {
@@ -732,7 +741,7 @@ Robot {
     }
     DEF LEFT_WHEEL HingeJoint {
       jointParameters HingeJointParameters {
-        position 12944.440222668107
+        position 12944.5697443838
         axis 0 1 0
         anchor 0 0.165 0
       }
@@ -747,7 +756,7 @@ Robot {
       ]
       endPoint Solid {
         translation 0 0.165 0
-        rotation 0.23674756453504261 -0.23674752282596406 -0.9422850954581078 1.6302086704928804
+        rotation 0.17753358311309053 -0.1775335363851341 -0.9679688374765045 1.6033458926550532
         children [
           DEF BLACK_CYLINDER_SHAPE Shape {
             appearance PBRAppearance {
@@ -1010,7 +1019,7 @@ Robot {
     }
     DEF RIGHT_WHEEL HingeJoint {
       jointParameters HingeJointParameters {
-        position 16752.029505562998
+        position 16752.182413176677
         axis 0 1 0
         anchor 0 -0.165 0
       }
@@ -1025,7 +1034,7 @@ Robot {
       ]
       endPoint Solid {
         translation 0 -0.165 0
-        rotation 0.24604730122941956 -0.24604726035251 -0.9375081179545826 1.6352813760745428
+        rotation 0.1764209940574349 -0.17642094723966023 -0.9683755894439139 1.6029259888277672
         children [
           DEF RIGHT_BLACK_CYLINDER_SHAPE Shape {
             appearance PBRAppearance {
@@ -3046,5 +3055,19 @@ Robot {
       -0.06 0 0.06
     ]
   }
-  controller "two_wheel_robot"
+  controller "mobile_robot"
+  customData "contrib"
+}
+Solid {
+  translation 1.69 0 0.43
+  children [
+    Shape {
+      appearance PBRAppearance {
+      }
+      geometry Cylinder {
+        height 0.6
+        radius 0.3
+      }
+    }
+  ]
 }

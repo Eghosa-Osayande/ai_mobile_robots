@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class TwoWheelRobot:
+class TwoWheelRobotBase:
 
     def move_wheels(self, v_right, v_left): ...
 
@@ -10,4 +10,6 @@ class TwoWheelRobot:
 
     def state(self): ...
 
-    def reset(self):...
+    def reset(self): ...
+
+    def shutdown(self): ...

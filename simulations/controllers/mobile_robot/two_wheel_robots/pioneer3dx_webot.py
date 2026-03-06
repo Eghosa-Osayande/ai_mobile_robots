@@ -1,34 +1,30 @@
 from dataclasses import dataclass
-from two_wheel_robot_base import TwoWheelRobot
-from controller import Robot, Motor, DistanceSensor, PositionSensor, GPS
+from .two_wheel_robot_base import TwoWheelRobotBase
+from controller import (
+    Robot,
+    Motor,
+    DistanceSensor,
+    PositionSensor,
+    GPS,
+    InertialUnit,
+)
+import math
 
 
 @dataclass
-class TwoWheelRobotWebot(TwoWheelRobot):
-
-    robot: Robot
-    leftMotor: Motor
-    rightMotor: Motor
-    frontSonars: list[DistanceSensor]
-    wheelRadius: float
-    wheelSeperation: float
-    gps: GPS
-    gpsOffset: tuple[float, float]
+class Pioneer3dxWebot(TwoWheelRobotBase):
 
     def __init__(
         self,
+        robot: Robot,
         leftMotorDeviceName: str,
         rightMotorDeviceName: str,
-        wheelRadius: float,
-        wheelSeperation: float,
         gpsOffset: tuple[float, float] = (0, 0),
     ):
 
-        self.robot = Robot()
+        self.robot = robot
         timestep = int(self.robot.getBasicTimeStep())
 
-        self.wheelRadius = wheelRadius
-        self.wheelSeperation = wheelSeperation
         self.gpsOffset = gpsOffset
 
         leftMotor: Motor = self.robot.getDevice(leftMotorDeviceName)
@@ -58,21 +54,19 @@ class TwoWheelRobotWebot(TwoWheelRobot):
         self.rightPosSensor = rightPosSensor
         rightPosSensor.enable(timestep)
 
+        imu: InertialUnit = self.robot.getDevice("inertial unit")
+        self.imu = imu
+        imu.enable(timestep)
+
         gps: GPS = self.robot.getDevice("gps")
         self.gps = gps
         gps.enable(timestep)
 
-    # def move(self, velocity: float):
-    #     wheel_rad_s = velocity / self.wheelRadius
-    #     self.rightMotor.setVelocity(wheel_rad_s)
-    #     self.leftMotor.setVelocity(wheel_rad_s)
-
-    # def rotate(self, velocity: float):
-    #     wheel_rad_s = velocity / self.wheelRadius
-    #     self.leftMotor.setVelocity(wheel_rad_s)
-    #     self.rightMotor.setVelocity(-wheel_rad_s)
-
-    def step(self, timeStepSeconds):
+    def step(
+        self,
+        timeStepSeconds=None,
+        **kw,
+    ):
         timestep = int(self.robot.getBasicTimeStep())
         if not timeStepSeconds:
             return self.robot.step(timestep)
@@ -87,10 +81,36 @@ class TwoWheelRobotWebot(TwoWheelRobot):
         self.rightMotor.setVelocity(v_right)
         self.leftMotor.setVelocity(v_left)
 
-    def state(self) -> tuple[float, float, float]:
+    def state(self) -> tuple[float, float, float, float, float]:
         x, y, _ = self.gps.getValues()
+        roll, pitch, yaw = self.imu.getRollPitchYaw()
+
+        distances = []
+        for s in self.frontSonars:
+            value = s.getValue()
+            distance_m = 5.0 * (1.0 - value / 1024.0)
+            distance_m = max(0.0, min(distance_m, 5.0))
+            distances.append(distance_m)
+
         return (
             x + self.gpsOffset[0],
             y + self.gpsOffset[1],
-            0,
+            math.degrees(yaw),
+            *distances,
         )
+
+    def reset(
+        self,
+        pos: tuple[float, float] = None,
+        **kw,
+    ):
+        self.theta = 0.0
+        self.x = 0.0
+        self.y = 0.0
+        self.v = 0.0
+        self.omega = 0.0
+
+        if pos:
+            self.x = pos[0]
+            self.y = pos[1]
+            self.theta = pos[2]

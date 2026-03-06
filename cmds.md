@@ -2,13 +2,15 @@
 
 ## Macos/Linux
 - List usb drivers
-ls /dev/cu.*
 
-- Search for drivers matching usbserial
-lsof | grep usbserial
+ls /dev/tty.*  // Mac
+ls /dev/ttyUSB* // Raspbery
 
-## Mobile robot
-cd simulation/controllers/mobile_robot
+## SSH
+- copy to raspberry pi over ssh
 
-## tk problems mac
-brew install python-tk
+rsync -avz --include-from=".pi.include" --exclude-from=".pi.exclude" -e ssh ./ z@raspberrypi.local:/home/z/mr
+
+- single file
+
+scp simulations/controllers/mobile_robot/mdps/avoid_and_track/env.py z@raspberrypi.local:/home/z/mr/simulations/controllers/mobile_robot/mdps/avoid_and_track/env.py
