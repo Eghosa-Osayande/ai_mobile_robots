@@ -36,24 +36,17 @@ def q_put_latest(q, item):
 
 
 class CamClient:
-    def __init__(self, src=0, tcp=None):
+    def __init__(
+        self,
+        src=0,
+        tcp=None,
+    ):
         self.cap = None
         self.sock = None
         self.q = None
         self._tcp = tcp
         self._src = src
         self._is_connected = False
-
-        if tcp is None:
-            self.cap = cv2.VideoCapture(src)
-            if not self.cap.isOpened():
-                raise RuntimeError("could not open camera")
-        else:
-            host, port = tcp
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.sock.connect((host, port))
-            self.q = queue.Queue(maxsize=1)
-            threading.Thread(target=self._tcp_reader, daemon=True).start()
 
     def start(self):
         if self._is_connected:
