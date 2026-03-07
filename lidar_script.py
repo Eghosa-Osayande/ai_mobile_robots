@@ -18,8 +18,10 @@ while True:
 
                 if not cmd:
                     continue
+                if cmd in {"0"}:
+                    raise 0
 
-                if cmd in {"exit", "quit"}:
+                if cmd in {"exit", "q"}:
                     break
 
                 msg = cmd + "\n"

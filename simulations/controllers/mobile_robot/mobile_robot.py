@@ -5,21 +5,17 @@ leftMotorDeviceName = "left wheel"
 rightMotorDeviceName = "right wheel"
 
 # pioneer config
-port = "/dev/cu.usbserial-10"
+port = "/dev/ttyUSB0"
 baudRate = 9600
 
 # odometry
-odometry_dt = 0.001
-odometry_approach_v_ms = 0.1
-odometry_turn_v_ms = 0.02 * 1
+odometry_dt = 0.0001
+odometry_approach_v_ms = 0.02*8
+odometry_turn_v_ms = 0.02 * 3
 goal_dist_thres = 0.1
-goal_heading_thres = 3.5
+goal_heading_thres = 2.5
 odometry_nodes = [
-    # (0, 0),
-    # (1.1, 0),
     (2.2, 0),
-    # (2.1, 1.3),
-    # (2.1, 2.5),
     (2.2, 2.5),
     (3.6, 2.5),
     (4.1, 2.5),
@@ -33,7 +29,36 @@ odometry_nodes = [
     (-1.9, 3.79),
 ]
 
-odometry_nodes = []
+odometry_nodes = [
+    #1
+    (1.1,0),
+    (2.2, 0),
+
+    #2
+    (2.2,1.1),
+    (2.2, 2.3),
+
+    #3
+    (3.2, 2.3),
+    (3.8, 2.3),
+    (4.4, 2.3),
+
+    #4
+    (4.4, 3.7),
+
+    #5
+
+    (3.4,3.7),
+    (2.0,3.7),
+    (1.0,3.7),
+    (0,3.7),
+    (-1.4,3.7)
+    # (4.2, 2.5),
+
+    # (4.1, 3.7),
+
+    # (-1.4, 3.7),
+]
 
 # avoid and track
 tracking_approach_v_ms = 0.08

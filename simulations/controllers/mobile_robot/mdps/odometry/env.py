@@ -55,7 +55,7 @@ class OdometryEnv:
 
         heading_err = heading_error((x1, y1, th), (x2, y2))
 
-        print(heading_err)
+        print((dist_err,heading_err))
 
         if abs(heading_err) < self.heading_err_thres and not self._turning_complete:
             self._turning_complete = True
