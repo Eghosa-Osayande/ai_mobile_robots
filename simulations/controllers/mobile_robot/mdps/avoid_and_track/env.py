@@ -155,7 +155,7 @@ class AvoidAndTrackingEnv:
         print("video capture started")
 
     def _avoid_obs(self, robot_state):
-        x, y, th, *scans = robot_state
+        x, y, th, scans,*_ = robot_state
 
         pos = (x, y, th)
         blockage_l_front_r = (False, False, False)
@@ -184,7 +184,7 @@ class AvoidAndTrackingEnv:
         ]
 
     def _track_obs(self, robot_state):
-        x, y, th, *scans = robot_state
+        x, y, th, scans,*_ = robot_state
 
         return [
             (x, y, th),

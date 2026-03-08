@@ -5,60 +5,60 @@ leftMotorDeviceName = "left wheel"
 rightMotorDeviceName = "right wheel"
 
 # pioneer config
-port = "/dev/ttyUSB0"
-baudRate = 9600
+serial_port_baud = ("/dev/tty.usbserial-10", 9600)
+serial_port_baud = ("/dev/ttyUSB0", 9600)
+serial_port_baud = None
+tcp_host_port = ("127.0.0.1", 8008)
+# tcp_host_port = None
 
 # odometry
-odometry_dt = 0.0001
-odometry_approach_v_ms = 0.02*8
+wheelSeperation = 0.32125
+odometry_approach_v_ms = 0.02 * 8
 odometry_turn_v_ms = 0.02 * 3
 goal_dist_thres = 0.1
 goal_heading_thres = 2.5
 odometry_nodes = [
-    (2.2, 0),
-    (2.2, 2.5),
-    (3.6, 2.5),
-    (4.1, 2.5),
-    (4.1, 3.7),
-    (3.1, 3.7),
-    (2.1, 3.8),
-    (1.1, 3.8),
-    (0.1, 3.8),
-    (-0.9, 3.8),
-    (-1.9, 3.8),
-    (-1.9, 3.79),
+    # 1
+    (1.1, 0),
+    (2.1, 0),
+    # 2
+    # (2.1, -1.3),
+    (2.1, -2.3),
+    # 3
+    (3.2, -2.4),
+    (3.8, -2.4, 0.02 * 5),
+    (4.4, -2.4),
+    # 4
+    (4.4, -3.7),
+    # 5
+    (3.4, -3.7),
+    (0, -3.9),
+    (-1.4, -3.9),
+    #
+    (-1.4, -3.899),
 ]
 
 odometry_nodes = [
-    #1
-    (1.1,0),
-    (2.2, 0),
-
-    #2
-    (2.2,1.1),
-    (2.2, 2.3),
-
-    #3
-    (3.2, 2.3),
-    (3.8, 2.3),
-    (4.4, 2.3),
-
-    #4
-    (4.4, 3.7),
-
-    #5
-
-    (3.4,3.7),
-    (2.0,3.7),
-    (1.0,3.7),
-    (0,3.7),
-    (-1.4,3.7)
-    # (4.2, 2.5),
-
-    # (4.1, 3.7),
-
-    # (-1.4, 3.7),
+    # 1
+    (1.1, 0),
+    (2.1, 0),
+    # 2
+    (2.1, -1.3),
+    (2.1, -2.3),
+    # 3
+    (3.2, -2.4),
+    (3.8, -2.4, 0.02 * 5),
+    (4.4, -2.4),
+    # 4
+    (4.4, -3.7),
+    # 5
+    (2, -3.7),
+    (-1.4, -3.7),
+    #
+    (-1.4, -3.7),
 ]
+
+
 
 # avoid and track
 tracking_approach_v_ms = 0.08
@@ -78,6 +78,7 @@ right_idxs = [4, 5, 6, 7]
 
 camera_index = 1
 camera_tcp_addr = ("0.0.0.0", 8081)
+camera_tcp_addr = None
 
 lidar_port = "/dev/cu.usbserial-0001"
 # lidar_port = None
@@ -97,7 +98,8 @@ if isSerial:
     from two_wheel_robots.pioneer3dx import Pioneer3dx
 
     robot_2wd = Pioneer3dx(
-        serial_port_baud=(port, baudRate),
+        serial_port_baud=serial_port_baud,
+        tcp_host_port=tcp_host_port,
         lidar_port=lidar_port,
     )
 
@@ -133,17 +135,17 @@ if worldID == "core":
     print("Odometry Start")
 
     odom_agent = OdometryAgent(
-        dt=odometry_dt,
+        approach_v_ms=odometry_approach_v_ms,
+        turn_v_ms=odometry_turn_v_ms,
+        wheel_seperation=wheelSeperation,
     )
 
     odom_env = OdometryEnv(
         robot=robot_2wd,
         goal=(0, 0),
-        approach_v_ms=odometry_approach_v_ms,
-        turn_v_ms=odometry_turn_v_ms,
-        dist_err_thres=goal_dist_thres,
-        heading_err_thres=goal_heading_thres,
     )
+    odom_env.render()
+    robot_2wd.step(3)
 
     for node in odometry_nodes:
         obs, _ = odom_env.reset(
@@ -160,7 +162,6 @@ if worldID == "core":
     print("Odometry End")
 
     # Tracking/Avoidance
-    print("Tracking/Avoidance Start")
 
     avoid_track_agent = AvoidAndTrackAgent(
         dt=tracking_dt,
@@ -188,6 +189,9 @@ if worldID == "core":
 
     avoid_track_obs, _ = avoid_track_env.reset()
 
+    print("Tracking/Avoidance Start")
+    robot_2wd.step(5)
+
     while True:
 
         avoid_track_action = avoid_track_agent.act(avoid_track_obs)
@@ -205,6 +209,13 @@ if worldID == "core":
 
     avoid_track_env.close()
     odom_env.close()
+
+    print("Saving logs")
+    import json
+    import time
+
+    with open(f"mobile_robot_logs_{time.time()}.json", "w") as fd:
+        json.dump(infos, fd)
 
 
 if worldID == "contrib":

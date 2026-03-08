@@ -1,19 +1,67 @@
-# Pioneer P3-DX Serial / MobileSim
+#!/usr/bin/env python3
+
+# Pioneer P3-DX / MobileSim
 
 from __future__ import annotations
+
+import glob
+import math
+import os
 import socket
 import struct
 import threading
 import time
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
-import socket
-import threading
-import time
-from typing import Optional
-import serial
-import math
-from queue import Queue, Empty
+
+
+import numpy as np
+
+# Optional deps
+try:
+    import cv2  # type: ignore
+except Exception:
+    cv2 = None
+
+try:
+    import serial  # type: ignore
+
+    try:
+        from serial.tools import list_ports  # type: ignore
+    except Exception:
+        list_ports = None
+except Exception:
+    serial = None
+    list_ports = None
+
+
+# ============================================================
+# CONFIG
+# ============================================================
+
+DEFAULT_SERIAL_PORT = os.environ.get(
+    "P3DX_SERIAL", "COM3" if os.name == "nt" else "/dev/ttyUSB0"
+)
+SERIAL_BAUD = int(os.environ.get("P3DX_BAUD", "9600"))
+
+MOBILE_SIM_HOST = os.environ.get("P3DX_HOST", "127.0.0.1")
+MOBILE_SIM_PORT = int(os.environ.get("P3DX_PORT", "8101"))
+
+
+CONTROL_HZ = 20
+WATCHDOG_SEC = 1.0
+
+
+def clamp(x: float, lo: float, hi: float) -> float:
+    return max(lo, min(hi, x))
+
+
+def wrap_deg_180(a: float) -> float:
+    return (a + 180.0) % 360.0 - 180.0
+
+
+def deg360(th: float) -> float:
+    return th - 360.0 * math.floor(th / 360.0)
 
 
 HEADER = bytes([0xFA, 0xFB])
@@ -34,18 +82,6 @@ ARG_POS_INT = 0x3B
 ARG_NEG_INT = 0x1B
 
 
-def clamp(x: float, lo: float, hi: float) -> float:
-    return max(lo, min(hi, x))
-
-
-def wrap_deg_180(a: float) -> float:
-    return (a + 180.0) % 360.0 - 180.0
-
-
-def deg360(th: float) -> float:
-    return th - 360.0 * math.floor(th / 360.0)
-
-
 def calc_checksum(packet: bytes) -> int:
     c = 0
     i = 3
@@ -58,6 +94,30 @@ def calc_checksum(packet: bytes) -> int:
     if n > 0:
         c ^= packet[i]
     return c & 0xFFFF
+
+# ============================================================
+# SIP parsing
+# ============================================================
+
+
+@dataclass
+class RobotState:
+    x_mm: float = 0.0
+    y_mm: float = 0.0
+    th_deg_wrap: float = 0.0
+    th_deg_360: float = 0.0
+
+    left_vel_mm_s: float = 0.0
+    right_vel_mm_s: float = 0.0
+
+    v_mm_s: float = 0.0
+    w_deg_s: float = 0.0
+
+    sonars_mm: List[float] = None
+
+    def __post_init__(self):
+        if self.sonars_mm is None:
+            self.sonars_mm = [0.0] * 16
 
 
 def _i16_le(buf: bytes, off: int) -> int:
@@ -120,29 +180,14 @@ def parse_sip(
     return x_raw, y_raw, th_raw, lvel, rvel, sonars
 
 
-@dataclass
-class RobotState:
-    x_mm: float = 0.0
-    y_mm: float = 0.0
-    th_deg_wrap: float = 0.0
-    th_deg_360: float = 0.0
-
-    left_vel_mm_s: float = 0.0
-    right_vel_mm_s: float = 0.0
-
-    v_mm_s: float = 0.0
-    w_deg_s: float = 0.0
-
-    sonars_mm: List[float] = None
-
-    def __post_init__(self):
-        if self.sonars_mm is None:
-            self.sonars_mm = [0.0] * 16
+# ============================================================
+# Link layer (TCP + Serial explicit)
+# ============================================================
 
 
 class PioneerLink:
     def __init__(
-        self,
+        self
     ):
         self.use_serial = False
         self.sock: Optional[socket.socket] = None
@@ -152,7 +197,8 @@ class PioneerLink:
         self._stop_evt = threading.Event()
         self._buf = bytearray()
 
-        self._latest: Queue[RobotState] = Queue(maxsize=1)
+        self._lock = threading.Lock()
+        self._latest: Optional[RobotState] = None
 
         self._origin_set = False
         self._x0 = 0.0
@@ -164,6 +210,7 @@ class PioneerLink:
 
         self.endpoint = ""
         self.transport = ""
+
 
     def _theta_raw_to_deg(self, th_raw: float) -> float:
         # Both the simulator and the physical hardware
@@ -196,26 +243,20 @@ class PioneerLink:
         return b""
 
     def _start_reader_and_wait_sip(self, timeout_s: float = 0.9) -> bool:
-        try:
-            while True:
-                self._latest.get_nowait()
-        except Empty:
-            pass
-
-        self._origin_set = False
         self._stop_evt.clear()
-        self._rx_thread = threading.Thread(
-            target=self._reader_loop,
-            daemon=True,
-        )
+        self._rx_thread = threading.Thread(target=self._reader_loop, daemon=True)
         self._rx_thread.start()
 
+        self._origin_set = False
+        with self._lock:
+            self._latest = None
         self._last_pulse = time.time()
+
         t0 = time.time()
         while time.time() - t0 < timeout_s:
             if self.get_state() is not None:
                 return True
-                
+            time.sleep(0.02)
         return False
 
     def connect_tcp(
@@ -246,6 +287,9 @@ class PioneerLink:
         if not self._start_reader_and_wait_sip():
             print("[ERROR] TCP connected but no SIP received.")
             self.close()
+            import sys
+
+            sys.exit()
             return False
 
         return True
@@ -256,7 +300,7 @@ class PioneerLink:
         baud: int,
     ) -> bool:
 
-        # self.close()
+        self.close()
         if serial is None:
             print("[ERR] pyserial not installed; cannot use Serial")
             return False
@@ -283,7 +327,7 @@ class PioneerLink:
         return True
 
     def close(self) -> None:
-        print("CLOSEEE")
+
         self._stop_evt.set()
         try:
             self.stop_motion()
@@ -306,11 +350,8 @@ class PioneerLink:
         self.sock = None
         self.use_serial = False
 
-        try:
-            while True:
-                self._latest.get_nowait()
-        except Empty:
-            pass
+        with self._lock:
+            self._latest = None
 
     def is_connected(self) -> bool:
         return self.ser is not None or self.sock is not None
@@ -365,8 +406,7 @@ class PioneerLink:
                     self._buf.extend(data)
                     self._consume_packets()
                 else:
-                    # time.sleep(0.01)
-                    ...
+                    time.sleep(0.01)
             except Exception as e:
                 print(f"[WARN] reader stopped ({e}); disconnecting")
                 self.close()
@@ -415,6 +455,9 @@ class PioneerLink:
             y_rel = y_raw - self._y0
             th_rel = th_deg_abs - self._th0
 
+            sonars_now = sonars[:]
+
+
             st = RobotState(
                 x_mm=x_rel,
                 y_mm=y_rel,
@@ -424,32 +467,31 @@ class PioneerLink:
                 right_vel_mm_s=rvel,
                 v_mm_s=(lvel + rvel) / 2.0,
                 w_deg_s=(rvel - lvel) * 0.1,
-                sonars_mm=sonars[:],
+                sonars_mm=sonars_now,
             )
 
-            self._latest.put(st)
+            with self._lock:
+                self._latest = st
 
     def get_state(self) -> Optional[RobotState]:
-        s = self._latest.get()
-        if s is None:
-            return None
-
-        return RobotState(
-            x_mm=s.x_mm,
-            y_mm=s.y_mm,
-            th_deg_wrap=s.th_deg_wrap,
-            th_deg_360=s.th_deg_360,
-            left_vel_mm_s=s.left_vel_mm_s,
-            right_vel_mm_s=s.right_vel_mm_s,
-            v_mm_s=s.v_mm_s,
-            w_deg_s=s.w_deg_s,
-            sonars_mm=s.sonars_mm[:],
-        )
+        with self._lock:
+            if self._latest is None:
+                return None
+            s = self._latest
+            return RobotState(
+                x_mm=s.x_mm,
+                y_mm=s.y_mm,
+                th_deg_wrap=s.th_deg_wrap,
+                th_deg_360=s.th_deg_360,
+                left_vel_mm_s=s.left_vel_mm_s,
+                right_vel_mm_s=s.right_vel_mm_s,
+                v_mm_s=s.v_mm_s,
+                w_deg_s=s.w_deg_s,
+                sonars_mm=s.sonars_mm[:],
+            )
 
     def pulse_if_needed(self) -> None:
-        WATCHDOG_SEC = 1.0
         now = time.time()
-
         if now - self._last_pulse >= WATCHDOG_SEC:
             try:
                 self.send_cmd(CMD_PULSE)

@@ -117,7 +117,8 @@ class Pioneer3dxWebot(TwoWheelRobotBase):
             x + self.gpsOffset[0],
             y + self.gpsOffset[1],
             math.degrees(yaw),
-            *distances,
+            distances,
+            [],
         )
 
     def reset(

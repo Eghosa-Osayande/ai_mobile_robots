@@ -78,7 +78,7 @@ def stream_lidar_to_queue(
             except queue.Empty:
                 pass
 
-            out_q.put(readings)
+            out_q.put((readings, scan))
     except Exception as e:
         if err_q is not None:
             err_q.put(e)

@@ -114,22 +114,23 @@ class Pioneer3dx(TwoWheelRobotBase):
                 0 + self.pos_offset[0],
                 0 + self.pos_offset[1],
                 0 + self.pos_offset[2],
-                *[5 for _ in range(8)],
+                [5 for _ in range(8)],
             )
 
         lidars = None
-
+        scan = []
         if self.lidar_link:
-            lidars = self.lidar_link.get_state()
+            lidars, scan = self.lidar_link.get_state()
 
         proximity_data = lidars if lidars is not None else data.sonars_mm
         proximity_data = [l / 1000 for l in proximity_data]
 
         return (
             (data.x_mm / 1000) + self.pos_offset[0],
-            -(data.y_mm / 1000) + self.pos_offset[1],
-            -(data.th_deg_360) + self.pos_offset[2],
-            *proximity_data,
+            (data.y_mm / 1000) + self.pos_offset[1],
+            (data.th_deg_360) + self.pos_offset[2],
+            proximity_data,
+            scan,
         )
 
     def reset(
