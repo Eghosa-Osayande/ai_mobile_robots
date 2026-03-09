@@ -3,7 +3,7 @@ import time
 import numpy as np
 
 from two_wheel_robots.two_wheel_robot_base import TwoWheelRobotBase
-from two_wheel_robots.integrations.camera_client import CamClient
+from two_wheel_robots.integrations.camera_link import CameraLink
 
 import cv2 as cv2
 import sys
@@ -96,7 +96,7 @@ class AvoidAndTrackingEnv:
     def __init__(
         self,
         robot: TwoWheelRobotBase,
-        cam_client: CamClient,
+        cam_client: CameraLink,
         # avoidance
         front_idxs: list[float],
         left_idxs: list[float],

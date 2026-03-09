@@ -35,12 +35,14 @@ class OdometryEnv:
         self,
         robot: TwoWheelRobotBase,
         goal: tuple[float, float],
+        render_filename="",
     ):
         super().__init__()
         self.robot = robot
         self.goal = goal
         self.last_cmd = None
         self._traj = []
+        self.render_filename = render_filename
         self._render_q = queue.Queue(maxsize=1)
         self._render_stop = threading.Event()
 
@@ -89,7 +91,6 @@ class OdometryEnv:
         return self._obs(), {}
 
     def step(self, action):
-        print(action)
         turn, move = action
         turn_vr, turn_vl, turn_dt, turn_start = turn
         move_vr, move_vl, move_dt, move_start = move
@@ -164,6 +165,7 @@ class OdometryEnv:
         }
 
         return obs, 0, terminated, False, info
+
     def _render_worker(self):
 
         while not self._render_stop.is_set():
@@ -208,7 +210,13 @@ class OdometryEnv:
             pass
 
         try:
-            filename="traj.png"
-            self._render_q.put_nowait((list(self._traj), (gx, gy), filename))
+            if self.render_filename:
+                self._render_q.put_nowait(
+                    (
+                        list(self._traj),
+                        (gx, gy),
+                        self.render_filename,
+                    )
+                )
         except queue.Full:
             pass

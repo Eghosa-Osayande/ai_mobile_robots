@@ -1,8 +1,9 @@
 import cv2
-from simulations.controllers.mobile_robot.two_wheel_robots.integrations.camera_client import CamClient
+from simulations.controllers.mobile_robot.two_wheel_robots.integrations.camera_link import CameraLink
 
 # cam = CamClient(src=0)
-cam = CamClient(tcp=("127.0.0.1", 8081))
+cam = CameraLink(src=0)
+cam.start()
 
 while True:
     ok, frame = cam.read()

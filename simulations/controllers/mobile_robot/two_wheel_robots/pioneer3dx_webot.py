@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-from .integrations.lidar_link import LidarLink
 from .two_wheel_robot_base import TwoWheelRobotBase
 from controller import (
     Robot,
@@ -64,14 +63,6 @@ class Pioneer3dxWebot(TwoWheelRobotBase):
         self.gps = gps
         gps.enable(timestep)
 
-        self.lidar_link = LidarLink(
-            port="lidar_port",
-            resolution=8,
-            fov_range=(-90, 90),
-        )
-
-        self.lidar_link.start()
-
     def step(
         self,
         timeStepSeconds=None,
@@ -102,16 +93,10 @@ class Pioneer3dxWebot(TwoWheelRobotBase):
             distance_m = max(0.0, min(distance_m, 5.0))
             distances.append(distance_m)
 
-        lidars = None
-
-        if self.lidar_link:
-            lidars = self.lidar_link.get_state()
-            if lidars is not None:
-                distances = [l for l in lidars]
+        
 
         if not distances:
             distances = [5 for _ in range(8)]
-        print("===>", distances)
 
         return (
             x + self.gpsOffset[0],

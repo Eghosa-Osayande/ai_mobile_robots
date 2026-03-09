@@ -35,7 +35,7 @@ def q_put_latest(q, item):
         pass
 
 
-class CamClient:
+class CameraLink:
     def __init__(
         self,
         src=0,
