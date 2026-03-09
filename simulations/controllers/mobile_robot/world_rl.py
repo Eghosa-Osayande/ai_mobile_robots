@@ -12,6 +12,10 @@ odometry_nodes = [
     (0.4, -3.7),
     (-1.4, -3.7),
 ]
+odometry_nodes=[
+    (2,0),
+    (2,0.5),
+]
 
 
 def run(robot_2wd, world_id):
@@ -29,17 +33,17 @@ def run(robot_2wd, world_id):
 
     evn = TwoWheelObstacleNavigationEnv(
         robot_factory=lambda *_, **kw: robot_2wd,
-        wheel_speed_limit=0.02 * 7,
+        wheel_speed_limit=0.02 * 5,
         dt=0.001,
         max_steps=999,
         goal_radius=0.15,
         arena_radius=6.0,
         obs_norm_radius=6.0,
         render_enabled=True,
-        allow_reverse=True,
+        allow_reverse= not True,
         robot_theta_tranformer=lambda th: math.radians(th),
         render_path=f"{world_id}/odometry.png",
-        safe_distance=0.2,
+        safe_distance=0.1,
     )
 
     for node in odometry_nodes:

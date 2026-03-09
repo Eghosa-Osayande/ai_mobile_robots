@@ -130,8 +130,8 @@ class Pioneer3dx(TwoWheelRobotBase):
             (data.x_mm / 1000) + self.pos_offset[0],
             (data.y_mm / 1000) + self.pos_offset[1],
             (data.th_deg_360) + self.pos_offset[2],
-            # proximity_data,
-            [5 for _ in range(8)],
+            proximity_data,
+            # [5 for _ in range(8)],
             scan,
         )
 
