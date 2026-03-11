@@ -77,11 +77,16 @@ common.RobotSingleton.set(robot_2wd)
 common.CameraLinkSingleton.set(camera_link)
 
 
-from experiments import exp1, exp2, exp3
-
 try:
     experiment_id = sys.argv[1]
 except:
     ...
 
-eval(experiment_id).main()
+eval(
+    f"""
+from experiments import {experiment_id}
+
+{experiment_id}.main()
+
+"""
+)
