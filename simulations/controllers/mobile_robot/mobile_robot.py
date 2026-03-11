@@ -82,11 +82,4 @@ try:
 except:
     ...
 
-eval(
-    f"""
-from experiments import {experiment_id}
-
-{experiment_id}.main()
-
-"""
-)
+eval(f"""from experiments import {experiment_id};{experiment_id}.main()""")
