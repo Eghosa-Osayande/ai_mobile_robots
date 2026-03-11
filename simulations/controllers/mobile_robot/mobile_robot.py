@@ -1,6 +1,3 @@
-
-print(__file__)
-
 import os
 import sys
 import common
