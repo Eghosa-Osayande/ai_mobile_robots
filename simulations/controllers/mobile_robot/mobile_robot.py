@@ -1,33 +1,68 @@
-import os
-import json
-from datetime import datetime
-import world_core, world_rl
 
-isSerial = os.environ.get("IS_WEBOTS") != "true"
+print(__file__)
+
+import os
+import sys
+import common
+from dotenv import load_dotenv
+from two_wheel_robots.integrations.camera_link import (
+    CameraLink,
+)
+
+load_dotenv()
+
+pioneer_serial_port = os.getenv("PIONEER_SERIAL_PORT")
+
+pioneer_serial_baud = os.getenv("PIONEER_SERIAL_BAUD", "9600")
+
+pioneer_tcp_host = os.getenv("PIONEER_TCP_HOST")
+
+pioneer_tcp_port = int(os.getenv("PIONEER_TCP_PORT", "8080"))
+
+camera_src = os.getenv("CAMERA_SRC", "0")
+
+webot_left_wheel = os.getenv("WEBOT_LEFT_WHEEL", "left wheel")
+
+webot_right_wheel = os.getenv("WEBOT_RIGHT_WHEEL", "right wheel")
+
+lidar_port = os.getenv("LIDAR_PORT")
+
+is_serial = os.environ.get("IS_WEBOTS") != "true"
+
+experiment_id = ""
 
 robot_2wd = None
-world_id = "world_rl"
 
-if isSerial:
+
+camera_link = CameraLink(
+    src=camera_src,
+)
+
+
+if is_serial:
     from two_wheel_robots.pioneer3dx import Pioneer3dx
 
-    lidar_port = "/dev/cu.usbserial-0001"
-    lidar_port = "/dev/ttyUSB0"
-    # lidar_port = ("localhost", 5000)
-    # lidar_port = None
-
-    # serial_port_baud = ("/dev/tty.usbserial-10", 9600)
-    serial_port_baud = ("/dev/ttyUSB1", 9600)
-    # serial_port_baud = None
-
-    # tcp_host_port = ("127.0.0.1", 8008)
+    serial_port_baud = None
     tcp_host_port = None
+
+    if pioneer_serial_port and pioneer_serial_baud:
+        serial_port_baud = (
+            pioneer_serial_port,
+            int(pioneer_serial_baud),
+        )
+
+    if pioneer_tcp_host and pioneer_tcp_port:
+        tcp_host_port = (
+            pioneer_tcp_host,
+            int(pioneer_tcp_port),
+        )
 
     robot_2wd = Pioneer3dx(
         serial_port_baud=serial_port_baud,
         tcp_host_port=tcp_host_port,
         lidar_port=lidar_port,
     )
+
 else:
     from two_wheel_robots.pioneer3dx_webot import Pioneer3dxWebot
     from controller import Robot
@@ -35,39 +70,21 @@ else:
     robot_webot = Robot()
     robot_2wd = Pioneer3dxWebot(
         robot_webot,
-        leftMotorDeviceName="left wheel",
-        rightMotorDeviceName="right wheel",
-        gpsOffset=(0, 0),
+        leftMotorDeviceName=webot_left_wheel,
+        rightMotorDeviceName=webot_right_wheel,
     )
 
     robot_webot.step(int(robot_webot.getBasicTimeStep()))
 
-    world_id = robot_webot.getCustomData()
+common.RobotSingleton.set(robot_2wd)
+common.CameraLinkSingleton.set(camera_link)
 
 
-runner = {
-    "world_core": world_core,
-    "world_rl": world_rl,
-}[world_id]
+from experiments import exp1, exp2, exp3
 
+try:
+    experiment_id = sys.argv[1]
+except:
+    ...
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-
-ts = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-
-logs_path = (
-    f"{current_dir}/logs/{world_id}/{ts}"
-)
-
-os.makedirs(
-    logs_path,
-    exist_ok=True,
-)
-
-infos = runner.run(robot_2wd, logs_path)
-
-info_file = f"{logs_path}/infos.json"
-
-with open(info_file, "w") as fd:
-    print("Saving logs")
-    json.dump(infos, fd)
+eval(experiment_id).main()

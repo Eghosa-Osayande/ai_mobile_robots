@@ -1,9 +1,9 @@
 import time
-import time
 
 from .two_wheel_robot_base import TwoWheelRobotBase
 from .integrations.pioneer_link import PioneerLink
 from .integrations.lidar_link import LidarLink
+from .corridor import corridor_distances_lfr
 
 
 class Pioneer3dx(TwoWheelRobotBase):
@@ -96,12 +96,22 @@ class Pioneer3dx(TwoWheelRobotBase):
         remainder = initialVelocity - velocityStep
         return velocityStep
 
+    # def move_wheels(self, v_right, v_left):
+    #     v_right = self._transformVelocity(v_right)
+    #     v_left = self._transformVelocity(v_left)
+    #     self.enableMotors(True)
+
+    #     arg = ((v_right & 0xFF) << 8) | (v_left & 0xFF)
+    #     self.send_command(32, argument_data=arg)
+
     def move_wheels(self, v_right, v_left):
         v_right = self._transformVelocity(v_right)
         v_left = self._transformVelocity(v_left)
+
         self.enableMotors(True)
 
-        arg = ((v_right & 0xFF) << 8) | (v_left & 0xFF)
+        arg = (v_right & 0xFF) | ((v_left & 0xFF) << 8)
+
         self.send_command(32, argument_data=arg)
 
     def step(self, timeStep):
@@ -109,31 +119,47 @@ class Pioneer3dx(TwoWheelRobotBase):
 
     def state(self) -> tuple[float, float, float]:
         data = self.link.get_state()
+        corridor = [1, 1, 1]
         if data is None:
             return (
                 0 + self.pos_offset[0],
                 0 + self.pos_offset[1],
                 0 + self.pos_offset[2],
-                [5 for _ in range(8)],
+                corridor,
                 [],
             )
 
-        lidars = None
         scan = []
-        if self.lidar_link:
-            lidars, scan = self.lidar_link.get_state()
 
-        proximity_data = lidars if lidars is not None else data.sonars_mm
-        proximity_data = [l / 1000 for l in proximity_data]
+        if self.lidar_link:
+            corridor, scan = self.get_corridor_from_lidar()
+        else:
+            corridor = self.get_corridor_from_sonars(data.sonars_mm)
 
         return (
             (data.x_mm / 1000) + self.pos_offset[0],
             (data.y_mm / 1000) + self.pos_offset[1],
             (data.th_deg_360) + self.pos_offset[2],
-            proximity_data,
-            # [5 for _ in range(8)],
+            corridor,
             scan,
         )
+
+    def get_corridor_from_sonars(self, sonars):
+        return [1, 1, 1]
+
+    def get_corridor_from_lidar(self):
+        lidars, scan = self.lidar_link.get_state()
+        proximity_data = [(a, d / 1000) for a, d in lidars]
+
+        corridor = corridor_distances_lfr(
+            readings=proximity_data,
+            robot_diameter=0.32,
+            lookahead=2,
+            margin=0.100,
+            front_width_ratio=0.5,
+        )
+
+        return corridor, scan
 
     def reset(
         self,

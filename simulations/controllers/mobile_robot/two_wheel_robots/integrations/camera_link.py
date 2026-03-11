@@ -38,13 +38,11 @@ def q_put_latest(q, item):
 class CameraLink:
     def __init__(
         self,
-        src=0,
-        tcp=None,
+        src="0",
     ):
         self.cap = None
         self.sock = None
         self.q = None
-        self._tcp = tcp
         self._src = src
         self._is_connected = False
 
@@ -52,14 +50,20 @@ class CameraLink:
         if self._is_connected:
             return
 
-        tcp = self._tcp
-        src = self._src
-        if tcp is None:
-            self.cap = cv2.VideoCapture(src)
+        src_int = None
+        src_str = self._src
+        try:
+            src_int = int(src_str)
+        except:
+            ...
+
+        if src_int is not None:
+            self.cap = cv2.VideoCapture(src_int)
             if not self.cap.isOpened():
                 raise RuntimeError("could not open camera")
         else:
-            host, port = tcp
+            host, port = src_str.split(":")
+            port = int(port)
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.sock.connect((host, port))
             self.q = queue.Queue(maxsize=1)

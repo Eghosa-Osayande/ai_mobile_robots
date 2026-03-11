@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass
 
 from .two_wheel_robot_base import TwoWheelRobotBase
@@ -8,8 +9,8 @@ from controller import (
     PositionSensor,
     GPS,
     InertialUnit,
+    Lidar
 )
-import math
 
 
 @dataclass
@@ -63,6 +64,10 @@ class Pioneer3dxWebot(TwoWheelRobotBase):
         self.gps = gps
         gps.enable(timestep)
 
+        lidar: Lidar = self.robot.getDevice("lidar")
+        self.lidar = lidar
+        lidar.enable(timestep)
+
     def step(
         self,
         timeStepSeconds=None,
@@ -83,6 +88,12 @@ class Pioneer3dxWebot(TwoWheelRobotBase):
         self.leftMotor.setVelocity(v_left)
 
     def state(self) -> tuple[float, float, float, float, float]:
+        im=self.lidar.getRangeImage()
+
+        for ii in im:
+            if ii !=float("inf"):
+                print(ii)
+        
         x, y, _ = self.gps.getValues()
         roll, pitch, yaw = self.imu.getRollPitchYaw()
 
@@ -93,16 +104,11 @@ class Pioneer3dxWebot(TwoWheelRobotBase):
             distance_m = max(0.0, min(distance_m, 5.0))
             distances.append(distance_m)
 
-        
-
-        if not distances:
-            distances = [5 for _ in range(8)]
-
         return (
             x + self.gpsOffset[0],
             y + self.gpsOffset[1],
             math.degrees(yaw),
-            distances,
+            [1, 1, 1],
             [],
         )
 

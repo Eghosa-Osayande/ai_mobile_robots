@@ -4,6 +4,8 @@ import time
 
 from two_wheel_robots.two_wheel_robot_base import TwoWheelRobotBase
 
+import matplotlib.pyplot as plt
+
 
 def heading_error(p, g):
     x, y, th = p
@@ -28,22 +30,17 @@ class OdometryEnv:
         self,
         robot: TwoWheelRobotBase,
         goal: tuple[float, float],
-        approach_v_ms,
-        turn_v_ms,
-        dist_err_thres=0,
-        heading_err_thres=0,
+        render_filename="",
     ):
         super().__init__()
         self.robot = robot
         self.goal = goal
-        self.approach_v_ms = approach_v_ms
-        self.turn_v_ms = turn_v_ms
-        self.dist_err_thres = dist_err_thres
-        self.heading_err_thres = heading_err_thres
-        self._turning_complete = False
+        self._traj = []
+        self._last_cmd = None
+        self.render_filename = render_filename
 
     def _obs(self):
-        x1, y1, th, *scans = self.robot.state()
+        x1, y1, th, corridor,*_ = self.robot.state()
 
         x2, y2 = self.goal[:2]
 
@@ -55,18 +52,12 @@ class OdometryEnv:
 
         heading_err = heading_error((x1, y1, th), (x2, y2))
 
-        print((dist_err,heading_err))
-
-        if abs(heading_err) < self.heading_err_thres and not self._turning_complete:
-            self._turning_complete = True
-
         return [
             (x1, y1, th),
-            scans,
+            corridor,
             self.goal,
             dist_err,
             heading_err,
-            self._turning_complete,
         ]
 
     def close(self): ...
@@ -76,46 +67,97 @@ class OdometryEnv:
         goal=None,
     ):
         self.goal = self.goal if goal is None else goal
-        self._turning_complete = False
+        # self._traj = []
+        self._last_cmd = None
         return self._obs(), {}
 
     def step(self, action):
 
         vr, vl, dt = action
 
-        velocity = self.approach_v_ms if vr == vl else self.turn_v_ms
-
-        self.robot.move_wheels(
-            vr * velocity,
-            vl * velocity,
-        )
+        if self._last_cmd != (vr, vl):
+            self._last_cmd = (vr, vl)
+            self.robot.move_wheels(
+                vr,
+                vl,
+            )
 
         self.robot.step(dt)
-
         obs = self._obs()
 
-        pos, scans, goal, dist_err, heading_err, turning_complete = obs
+        pos, scans, goal, dist_err, heading_err, *_ = obs
 
-        terminated = dist_err <= self.dist_err_thres
-        if terminated:
-            self.robot.move_wheels(0, 0)
+        self._traj.append(pos[:2])
+
+        terminated = action == (0, 0, 0)
 
         self.render(obs=obs)
 
         info = {
             "time": time.time(),
-            "x": pos[0],
-            "y": pos[1],
-            "th": pos[2],
-            "gx": goal[0],
-            "gy": goal[1],
+            "x": float(pos[0]),
+            "y": float(pos[1]),
+            "th": float(pos[2]),
+            "gx": float(goal[0]),
+            "gy": float(goal[1]),
             "is_at_goal": terminated,
-            "v": velocity,
-            "vr": vr,
-            "vl": vl,
+            "vr": float(vr),
+            "vl": float(vl),
             "env": "odom",
         }
 
         return obs, 0, terminated, False, info
 
-    def render(self, obs=None): ...
+    def render(self, obs=None, path=None):
+        if obs is None:
+            obs = self._obs()
+
+        if not self.render_filename and not path:
+            return
+
+        if len(self._traj) < 1:
+            return
+
+        pos, _, goal, *_ = obs
+        x, y, theta = pos
+
+        xs = [p[0] for p in self._traj]
+        ys = [p[1] for p in self._traj]
+
+        plt.clf()
+
+        plt.plot(xs, ys)
+        plt.scatter(xs[0], ys[0])
+        plt.scatter(x, y)
+
+        arrow_len = 0.5
+        dx = arrow_len * math.cos(theta)
+        dy = arrow_len * math.sin(theta)
+        # plt.arrow(
+        #     x,
+        #     y,
+        #     dx,
+        #     dy,
+        #     head_width=0.15,
+        #     head_length=0.2,
+        #     length_includes_head=True,
+        # )
+
+        goal_radius = 0
+        plt.scatter(goal[0], goal[1])
+        plt.gca().add_patch(
+            plt.Circle(
+                (goal[0], goal[1]),
+                goal_radius,
+                fill=False,
+            )
+        )
+        arena_radius = 7
+        obs_norm_radius = 7
+        if arena_radius is not None:
+            plt.gca().add_patch(plt.Circle((0, 0), arena_radius, fill=False))
+
+        plt.gca().set_aspect("equal", adjustable="box")
+        plt.xlim(-obs_norm_radius, obs_norm_radius)
+        plt.ylim(-obs_norm_radius, obs_norm_radius)
+        plt.savefig(self.render_filename if not path else path)
