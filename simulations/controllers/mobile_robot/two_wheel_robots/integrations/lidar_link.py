@@ -113,7 +113,6 @@ class LidarLink:
                 self.serial_port,
                 self.resolution,
                 self.fov_range,
-                float("inf"),
             ),
             kwargs={
                 "stop_event": self.stop_event,
