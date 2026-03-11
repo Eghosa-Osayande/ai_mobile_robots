@@ -82,4 +82,7 @@ try:
 except:
     ...
 
-eval(f"""from experiments import {experiment_id};{experiment_id}.main()""")
+import importlib
+
+module = importlib.import_module(f"experiments.{experiment_id}")
+module.main()
