@@ -13,7 +13,7 @@ def main():
         model_path="train_navigation_outputs/model.zip",
         dist_err_thres=0.2,
         heading_err_thres=5,
-        max_forward_v=0.02 * 20,  # 10 / 20
+        max_forward_v=0.02 * 10,  # 10 / 20
         max_turn_v=0.02 * 3,
         dt=0.1,
     )
@@ -31,7 +31,7 @@ def main():
         robot_2wd=robot_instance(),
         dt=0.1,
         forward_seq=5,
-        safe_distance_min=15 / 100,
+        safe_distance_min=10 / 100,
         velocity_max=0.02 * 5,
     )
 

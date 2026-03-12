@@ -39,6 +39,12 @@ class TwoWheelRobotWithoutObstacles:
 
         self.wheel_distance = float(wheel_distance)
 
+        self.theta = 0.0
+        self.x = 0.0
+        self.y = 0.0
+        self.v = 0.0
+        self.omega = 0.0
+
     def reset(
         self,
         pos: tuple[float, float] = None,
@@ -106,7 +112,7 @@ class TwoWheelNavigationEnv(gym.Env):
         allow_reverse: bool = False,
         seed: Optional[int] = None,
         robot_theta_tranformer=None,
-        render_path="navigation.png",
+        render_path="",
     ):
         super().__init__()
         self.render_enabled = render_enabled
@@ -200,7 +206,7 @@ class TwoWheelNavigationEnv(gym.Env):
                 obstacles=[],
             )
 
-        if reset_robot and  not robot_pos:
+        if reset_robot and not robot_pos:
             if self.spawn_sampler is not None:
                 (sx, sy), stheta = self.spawn_sampler(self.np_random)
             else:
@@ -279,7 +285,7 @@ class TwoWheelNavigationEnv(gym.Env):
         self._ep_prev_action = (v_r, v_l)
 
         d = float(math.hypot(self.goal[0] - x, self.goal[1] - y))
-        
+
         success = d <= self.goal_radius
 
         reward = float(self.prev_dist - d)
@@ -406,7 +412,9 @@ class TwoWheelNavigationEnv(gym.Env):
         plt.gca().set_aspect("equal", adjustable="box")
         plt.xlim(-self.obs_norm_radius, self.obs_norm_radius)
         plt.ylim(-self.obs_norm_radius, self.obs_norm_radius)
-        plt.savefig(self._render_path)
+        if self._render_path:
+            plt.savefig(self._render_path)
+        # plt.show()
 
     def _get_robot_state(self):
         x, y, theta, *_ = self.robot.state()

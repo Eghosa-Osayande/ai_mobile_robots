@@ -161,3 +161,4 @@ class OdometryEnv:
         plt.xlim(-obs_norm_radius, obs_norm_radius)
         plt.ylim(-obs_norm_radius, obs_norm_radius)
         plt.savefig(self.render_filename if not path else path)
+        plt.show()
